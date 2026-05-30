@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Registros TCC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#378ADD">
+<title>Registros TCC</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg1: #ffffff; --bg2: #f4f4f2; --bg3: #eeede9;
+  --text1: #1a1a18; --text2: #5c5c58; --text3: #9c9a92;
+  --border1: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.2);
+  --blue: #378ADD; --blue-dark: #185FA5;
+  --green: #639922; --red: #E24B4A;
+  --radius-md: 8px; --radius-lg: 12px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg1: #1c1c1a; --bg2: #252523; --bg3: #2e2e2b;
+    --text1: #e8e6de; --text2: #a8a69e; --text3: #6e6c65;
+    --border1: rgba(255,255,255,0.10); --border2: rgba(255,255,255,0.18);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:var(--font);background:var(--bg3);color:var(--text1);min-height:100vh;display:flex;justify-content:center;}
+.app{width:100%;max-width:430px;min-height:100vh;background:var(--bg1);display:flex;flex-direction:column;position:relative;}
+.screen{display:none;flex-direction:column;flex:1;animation:fadeIn .2s ease;}
+.screen.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+@keyframes shake{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-8px);}40%,80%{transform:translateX(8px);}}
+.shake{animation:shake .35s ease;}
+
+/* ── HEADER ── */
+.header{padding:1rem 1rem .75rem;border-bottom:0.5px solid var(--border1);display:flex;align-items:center;gap:10px;}
+.header-title{font-size:15px;font-weight:500;color:var(--text1);flex:1;}
+.back-btn{background:none;border:none;cursor:pointer;color:var(--text2);padding:4px;display:flex;align-items:center;}
+.icon-btn{background:none;border:none;cursor:pointer;color:var(--text2);padding:4px;display:flex;align-items:center;}
+
+/* ── TAB BAR ── */
+.tab-bar{display:flex;border-top:0.5px solid var(--border1);background:var(--bg1);}
+.tab-btn{flex:1;padding:10px 0 14px;background:none;border:none;cursor:pointer;font-size:11px;color:var(--text3);font-family:var(--font);display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .15s;}
+.tab-btn.active{color:var(--blue);}
+.tab-btn i{font-size:22px;}
+
+/* ── BUTTONS ── */
+.btn-primary{padding:12px;border:none;border-radius:var(--radius-md);background:var(--blue);font-size:14px;cursor:pointer;color:#fff;font-family:var(--font);font-weight:500;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s;width:100%;}
+.btn-primary:hover{background:var(--blue-dark);}
+.btn-primary:disabled{background:var(--bg2);color:var(--text3);cursor:not-allowed;}
+.btn-secondary{padding:11px;border:0.5px solid var(--border2);border-radius:var(--radius-md);background:transparent;font-size:13px;cursor:pointer;color:var(--text1);font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;width:100%;}
+.btn-secondary:hover{background:var(--bg2);}
+.btn-danger{padding:10px;border:0.5px solid #E24B4A44;border-radius:var(--radius-md);background:transparent;font-size:13px;cursor:pointer;color:var(--red);font-family:var(--font);width:100%;}
+
+/* ── HOME ── */
+.home-header{padding:1.5rem 1rem 1rem;}
+.home-title{font-size:20px;font-weight:500;margin-bottom:4px;}
+.home-sub{font-size:13px;color:var(--text2);}
+.home-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:0 1rem 1rem;}
+.stat-card{background:var(--bg2);border-radius:var(--radius-md);padding:.75rem 1rem;}
+.stat-num{font-size:22px;font-weight:500;}
+.stat-lbl{font-size:11px;color:var(--text2);margin-top:2px;}
+.tipo-list{padding:0 1rem 1rem;display:flex;flex-direction:column;gap:10px;flex:1;}
+.tipo-card{background:var(--bg1);border:0.5px solid var(--border1);border-radius:var(--radius-lg);padding:1rem 1.25rem;cursor:pointer;transition:border-color .15s,background .15s;}
+.tipo-card:hover{background:var(--bg2);}
+.tipo-card-title{font-size:14px;font-weight:500;margin-bottom:4px;}
+.tipo-card-desc{font-size:12px;color:var(--text2);line-height:1.5;}
+.tipo-pasos{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.paso-pill{font-size:11px;padding:3px 8px;border-radius:20px;font-weight:500;}
+.pill-sit{background:#E6F1FB;color:#0C447C;}
+.pill-pen{background:#EEEDFE;color:#3C3489;}
+.pill-emo{background:#FAECE7;color:#712B13;}
+.pill-con{background:#EAF3DE;color:#27500A;}
+.pill-csc{background:#FAEEDA;color:#633806;}
+
+/* ── REGISTRO PASO A PASO ── */
+.progress-bar-wrap{padding:1rem 1rem 0;}
+.progress-label{font-size:12px;color:var(--text2);margin-bottom:8px;display:flex;justify-content:space-between;}
+.progress-bar{height:4px;background:var(--bg2);border-radius:4px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--blue);border-radius:4px;transition:width .3s ease;}
+.paso-content{padding:1.25rem 1rem;flex:1;display:flex;flex-direction:column;}
+.paso-icono{font-size:26px;margin-bottom:10px;}
+.paso-titulo{font-size:18px;font-weight:500;margin-bottom:6px;}
+.paso-pregunta{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:1rem;}
+.paso-textarea{width:100%;border:0.5px solid var(--border1);border-radius:var(--radius-md);padding:12px;font-family:var(--font);font-size:14px;color:var(--text1);background:var(--bg1);resize:none;min-height:110px;line-height:1.6;transition:border-color .15s;}
+.paso-textarea:focus{outline:none;border-color:var(--blue);}
+.paso-textarea::placeholder{color:var(--text3);}
+.nav-btns{padding:1rem;display:flex;gap:10px;border-top:0.5px solid var(--border1);}
+.nav-btns .btn-secondary{flex:1;}
+.nav-btns .btn-primary{flex:2;}
+
+/* ── EMOCIONES ── */
+.emo-tabs{display:flex;border:0.5px solid var(--border1);border-radius:var(--radius-md);overflow:hidden;margin-bottom:12px;}
+.emo-tab{flex:1;padding:7px 4px;background:none;border:none;font-size:11px;font-family:var(--font);color:var(--text2);cursor:pointer;transition:background .15s;}
+.emo-tab.active{background:var(--bg2);color:var(--text1);font-weight:500;}
+.emo-item{background:var(--bg1);border:0.5px solid var(--border1);border-radius:var(--radius-md);padding:10px 12px;margin-bottom:8px;}
+.emo-item-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.emo-nombre{flex:1;font-size:13px;font-weight:500;}
+.emo-input-libre{flex:1;border:none;border-bottom:0.5px solid var(--border1);padding:4px 0;font-size:14px;font-family:var(--font);color:var(--text1);background:transparent;}
+.emo-input-libre:focus{outline:none;border-bottom-color:var(--blue);}
+.emo-input-libre::placeholder{color:var(--text3);}
+.emo-del{background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;display:flex;align-items:center;}
+.emo-del:hover{color:var(--red);}
+.emo-slider-row{display:flex;align-items:center;gap:8px;}
+.emo-slider-label{font-size:11px;color:var(--text2);white-space:nowrap;}
+.emo-slider-val{font-size:12px;font-weight:500;min-width:32px;text-align:right;}
+.emo-slider-row input[type=range]{flex:1;accent-color:#D85A30;}
+.btn-agregar-emo{display:flex;align-items:center;gap:6px;background:none;border:0.5px dashed var(--border2);border-radius:var(--radius-md);padding:9px 14px;font-size:13px;color:var(--text2);cursor:pointer;width:100%;font-family:var(--font);margin-top:4px;}
+.btn-agregar-emo:hover{background:var(--bg2);}
+.plutchik-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px;}
+.plutchik-cat{border-radius:var(--radius-md);overflow:hidden;border:0.5px solid var(--border1);}
+.plutchik-cat-header{padding:7px 10px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.plutchik-cat-body{padding:6px 8px;display:flex;flex-wrap:wrap;gap:4px;}
+.emo-chip{font-size:11px;padding:4px 8px;border-radius:20px;cursor:pointer;border:0.5px solid transparent;font-family:var(--font);}
+.emo-chip.selected{font-weight:500;}
+
+/* ── RESUMEN ── */
+.resumen-header{padding:1.25rem 1rem .75rem;border-bottom:0.5px solid var(--border1);}
+.resumen-tipo{font-size:12px;color:var(--text2);margin-bottom:4px;}
+.resumen-titulo{font-size:17px;font-weight:500;}
+.resumen-body{padding:1rem;flex:1;overflow-y:auto;}
+.resumen-item{margin-bottom:1rem;border:0.5px solid var(--border1);border-radius:var(--radius-md);overflow:hidden;}
+.resumen-item-header{padding:8px 12px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;}
+.resumen-item-body{padding:10px 12px;font-size:13px;line-height:1.6;background:var(--bg1);}
+.emo-tag{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:4px 10px;margin:3px 3px 3px 0;font-size:12px;}
+.emo-tag-int{font-size:11px;border-radius:20px;padding:2px 6px;}
+.diagrama{margin-bottom:1rem;display:flex;flex-direction:column;}
+.diag-node{padding:8px 12px;border-radius:var(--radius-md);font-size:12px;text-align:center;}
+.diag-arrow{text-align:center;font-size:14px;color:var(--text3);line-height:1.4;}
+.diag-sit{background:#E6F1FB;color:#0C447C;}
+.diag-pen{background:#EEEDFE;color:#3C3489;}
+.diag-emo{background:#FAECE7;color:#712B13;}
+.diag-con{background:#EAF3DE;color:#27500A;}
+.diag-csc{background:#FAEEDA;color:#633806;}
+.resumen-footer{padding:1rem;border-top:0.5px solid var(--border1);display:flex;gap:10px;}
+
+/* ── HISTORIAL ── */
+.hist-filtros{display:flex;gap:6px;padding:1rem 1rem .5rem;overflow-x:auto;}
+.hist-filtro{white-space:nowrap;font-size:12px;padding:5px 12px;border-radius:20px;border:0.5px solid var(--border1);background:none;cursor:pointer;font-family:var(--font);color:var(--text2);}
+.hist-filtro.active{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:500;}
+.hist-list-body{flex:1;padding:.5rem 1rem 1rem;display:flex;flex-direction:column;gap:8px;overflow-y:auto;}
+.hist-item{background:var(--bg1);border:0.5px solid var(--border1);border-radius:var(--radius-md);padding:12px;}
+.hist-item-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.hist-tipo-badge{font-size:11px;padding:3px 8px;border-radius:20px;font-weight:500;}
+.hist-meta{display:flex;align-items:center;gap:8px;}
+.hist-fecha-lbl{font-size:11px;color:var(--text3);}
+.hist-del-btn{background:none;border:none;cursor:pointer;color:var(--text3);padding:2px;display:flex;align-items:center;}
+.hist-del-btn:hover{color:var(--red);}
+.hist-preview{font-size:13px;line-height:1.5;}
+.hist-emos{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.hist-emo-chip{font-size:11px;padding:3px 8px;border-radius:20px;}
+.hist-empty{text-align:center;color:var(--text2);font-size:13px;padding:3rem 1rem;}
+.storage-badge{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);padding:.5rem 1rem;border-top:0.5px solid var(--border1);}
+.storage-dot{width:6px;height:6px;border-radius:50%;background:#639922;flex-shrink:0;}
+
+/* ── GRÁFICA ── */
+.chart-section{padding:.75rem 1rem 0;}
+.vista-tabs{display:flex;border:0.5px solid var(--border1);border-radius:var(--radius-md);overflow:hidden;margin-bottom:10px;}
+.vista-tab{flex:1;padding:7px;background:none;border:none;font-size:12px;font-family:var(--font);color:var(--text2);cursor:pointer;}
+.vista-tab.active{background:var(--bg2);color:var(--text1);font-weight:500;}
+.canvas-box{width:100%;height:190px;}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px;padding:.75rem 1rem;border-top:0.5px solid var(--border1);margin-top:.5rem;}
+.ley-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer;padding:3px 7px;border-radius:20px;border:0.5px solid transparent;}
+.ley-item.inactive{opacity:.35;}
+.ley-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.graf-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:.75rem 1rem 1rem;}
+.graf-stat{background:var(--bg2);border-radius:var(--radius-md);padding:.6rem .75rem;}
+.graf-stat-num{font-size:18px;font-weight:500;}
+.graf-stat-lbl{font-size:10px;color:var(--text2);margin-top:1px;}
+.graf-stat-emo{font-size:11px;color:var(--text2);margin-top:3px;display:flex;align-items:center;gap:4px;}
+.graf-stat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* ── PERFIL / PIN ── */
+.lock-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;}
+.avatar-circle{width:72px;height:72px;border-radius:50%;background:var(--bg2);border:0.5px solid var(--border1);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:1rem;}
+.lock-nombre{font-size:18px;font-weight:500;margin-bottom:6px;text-align:center;}
+.lock-sub{font-size:13px;color:var(--text2);margin-bottom:1.75rem;text-align:center;}
+.pin-dots{display:flex;gap:14px;margin-bottom:1.5rem;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border2);transition:background .15s;}
+.pin-dot.filled{background:var(--blue);border-color:var(--blue);}
+.pin-dot.error{background:var(--red);border-color:var(--red);}
+.pin-error-msg{font-size:12px;color:var(--red);margin-bottom:.75rem;min-height:16px;text-align:center;}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:240px;}
+.num-btn{height:56px;border:0.5px solid var(--border1);border-radius:var(--radius-lg);background:var(--bg1);font-size:20px;color:var(--text1);cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;transition:background .12s;}
+.num-btn:hover{background:var(--bg2);}
+.num-btn:active{transform:scale(0.93);}
+.num-btn.empty{border:none;background:none;cursor:default;}
+.setup-body{flex:1;padding:1.5rem 1rem;display:flex;flex-direction:column;gap:1.25rem;}
+.field-label{font-size:12px;color:var(--text2);margin-bottom:6px;}
+.field-input{width:100%;border:0.5px solid var(--border1);border-radius:var(--radius-md);padding:11px 14px;font-family:var(--font);font-size:15px;color:var(--text1);background:var(--bg1);transition:border-color .15s;}
+.field-input:focus{outline:none;border-color:var(--blue);}
+.field-input::placeholder{color:var(--text3);}
+.avatar-pick{display:flex;gap:8px;flex-wrap:wrap;}
+.av-opt{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border1);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:border-color .15s;}
+.av-opt.sel{border-color:var(--blue);}
+.pin-setup-wrap{display:flex;flex-direction:column;align-items:center;gap:1rem;width:100%;}
+.pin-setup-dots{display:flex;gap:12px;}
+.pin-setup-dot{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--border2);transition:background .15s;}
+.pin-setup-dot.filled{background:var(--blue);border-color:var(--blue);}
+.mini-numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;}
+.mini-num{height:48px;border:0.5px solid var(--border1);border-radius:var(--radius-md);background:var(--bg1);font-size:18px;color:var(--text1);cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;}
+.mini-num:hover{background:var(--bg2);}
+.mini-num:active{transform:scale(0.93);}
+.setup-footer{padding:1rem;border-top:0.5px solid var(--border1);}
+.step-dots{display:flex;gap:6px;justify-content:center;margin-bottom:1rem;}
+.step-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);}
+.step-dot.active{background:var(--blue);}
+.perfil-card{background:var(--bg1);border:0.5px solid var(--border1);border-radius:var(--radius-lg);padding:1.25rem;display:flex;align-items:center;gap:1rem;margin-bottom:.75rem;}
+.perfil-av{width:56px;height:56px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:24px;}
+.perfil-nombre{font-size:16px;font-weight:500;}
+.perfil-sub{font-size:12px;color:var(--text2);margin-top:3px;}
+.perfil-row{background:var(--bg1);border:0.5px solid var(--border1);border-radius:var(--radius-md);padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;}
+.perfil-row-label{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px;}
+.perfil-row-val{font-size:13px;font-weight:500;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);padding:9px 18px;border-radius:20px;font-size:13px;z-index:999;white-space:nowrap;pointer-events:none;color:#fff;}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<!-- ══════════════════════════════════════════
+     PANTALLA: LOCK / PIN
+══════════════════════════════════════════ -->
+<div id="screen-lock" class="screen">
+  <div class="lock-wrap">
+    <div class="avatar-circle" id="lock-av">😊</div>
+    <div class="lock-nombre" id="lock-nombre">Bienvenido</div>
+    <div class="lock-sub">Ingresa tu PIN para continuar</div>
+    <div class="pin-dots" id="lock-dots">
+      <div class="pin-dot"></div><div class="pin-dot"></div>
+      <div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="pin-error-msg" id="lock-error"></div>
+    <div class="numpad" id="lock-numpad"></div>
+    <button style="margin-top:1.5rem;background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;font-family:var(--font);" onclick="olvidePIN()">¿Olvidé mi PIN?</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANTALLA: SETUP PERFIL
+══════════════════════════════════════════ -->
+<div id="screen-setup" class="screen">
+  <div class="header"><div class="header-title" id="setup-title">Crear perfil</div></div>
+  <div class="setup-body">
+    <div class="step-dots"><div class="step-dot active" id="sdot-1"></div><div class="step-dot" id="sdot-2"></div></div>
+    <div id="setup-step-1">
+      <div class="field-label">Tu nombre o apodo</div>
+      <input class="field-input" id="input-nombre" type="text" placeholder="¿Cómo te llamamos?" maxlength="30"/>
+      <div style="margin-top:1.25rem;">
+        <div class="field-label" style="margin-bottom:10px;">Elige un avatar</div>
+        <div class="avatar-pick" id="avatar-pick"></div>
+      </div>
+    </div>
+    <div id="setup-step-2" style="display:none;">
+      <div class="field-label" style="text-align:center;margin-bottom:1rem;">Crea tu PIN de 4 dígitos</div>
+      <div class="pin-setup-wrap">
+        <div class="pin-setup-dots" id="setup-dots">
+          <div class="pin-setup-dot"></div><div class="pin-setup-dot"></div>
+          <div class="pin-setup-dot"></div><div class="pin-setup-dot"></div>
+        </div>
+        <div class="mini-numpad" id="setup-numpad"></div>
+        <div style="font-size:11px;color:var(--text3);text-align:center;">Tu PIN es privado y solo existe en este dispositivo</div>
+      </div>
+    </div>
+    <div id="setup-step-3" style="display:none;">
+      <div class="field-label" style="text-align:center;margin-bottom:1rem;">Confirma tu PIN</div>
+      <div class="pin-setup-wrap">
+        <div class="pin-setup-dots" id="confirm-dots">
+          <div class="pin-setup-dot"></div><div class="pin-setup-dot"></div>
+          <div class="pin-setup-dot"></div><div class="pin-setup-dot"></div>
+        </div>
+        <div class="mini-numpad" id="confirm-numpad"></div>
+        <div class="pin-error-msg" id="confirm-error"></div>
+      </div>
+    </div>
+  </div>
+  <div class="setup-footer"><button class="btn-primary" id="setup-next-btn" onclick="setupNext()" disabled>Continuar</button></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANTALLA: HOME
+══════════════════════════════════════════ -->
+<div id="screen-home" class="screen">
+  <div class="home-header">
+    <div class="home-title">Mis registros</div>
+    <div class="home-sub">¿Qué quieres registrar hoy?</div>
+  </div>
+  <div class="home-stats">
+    <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">registros totales</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-semana">0</div><div class="stat-lbl">esta semana</div></div>
+  </div>
+  <div class="tipo-list">
+    <div class="tipo-card" onclick="iniciarRegistro('ec')">
+      <div class="tipo-card-title">Emoción — Conducta</div>
+      <div class="tipo-card-desc">Registro básico de lo que sientes y cómo actúas.</div>
+      <div class="tipo-pasos"><span class="paso-pill pill-emo">Emoción</span><span class="paso-pill pill-con">Conducta</span></div>
+    </div>
+    <div class="tipo-card" onclick="iniciarRegistro('abc')">
+      <div class="tipo-card-title">Modelo cognitivo (ABC)</div>
+      <div class="tipo-card-desc">Situación, pensamiento, emoción y conducta.</div>
+      <div class="tipo-pasos"><span class="paso-pill pill-sit">Situación</span><span class="paso-pill pill-pen">Pensamiento</span><span class="paso-pill pill-emo">Emoción</span><span class="paso-pill pill-con">Conducta</span></div>
+    </div>
+    <div class="tipo-card" onclick="iniciarRegistro('scc')">
+      <div class="tipo-card-title">Situación — Consecuencia</div>
+      <div class="tipo-card-desc">Qué pasó, cómo respondiste y qué resultó.</div>
+      <div class="tipo-pasos"><span class="paso-pill pill-sit">Situación</span><span class="paso-pill pill-con">Conducta</span><span class="paso-pill pill-csc">Consecuencia</span></div>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showTab('home')"><i class="ti ti-plus-circle"></i>Nuevo</button>
+    <button class="tab-btn" onclick="showTab('historial')"><i class="ti ti-clipboard-list"></i>Registros</button>
+    <button class="tab-btn" onclick="showTab('grafica')"><i class="ti ti-chart-line"></i>Gráfica</button>
+    <button class="tab-btn" onclick="showTab('perfil')"><i class="ti ti-user-circle"></i>Perfil</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANTALLA: PASO A PASO
+══════════════════════════════════════════ -->
+<div id="screen-paso" class="screen">
+  <div class="progress-bar-wrap">
+    <div class="progress-label">
+      <span id="prog-label">Paso 1 de 4</span>
+      <span id="prog-tipo" style="font-weight:500;"></span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:25%"></div></div>
+  </div>
+  <div class="paso-content">
+    <div class="paso-icono" id="paso-icono"></div>
+    <div class="paso-titulo" id="paso-titulo"></div>
+    <div class="paso-pregunta" id="paso-pregunta"></div>
+    <div id="input-area"></div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn-secondary" onclick="pasoAnterior()"><i class="ti ti-arrow-left"></i> Atrás</button>
+    <button class="btn-primary" id="btn-siguiente" onclick="pasoSiguiente()">Continuar</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANTALLA: RESUMEN
+══════════════════════════════════════════ -->
+<div id="screen-resumen" class="screen">
+  <div class="resumen-header">
+    <div class="resumen-tipo" id="res-tipo"></div>
+    <div class="resumen-titulo">Tu registro completo</div>
+  </div>
+  <div class="resumen-body" id="res-body"></div>
+  <div class="resumen-footer">
+    <button class="btn-secondary" onclick="show('screen-home');updateTabs('home')"><i class="ti ti-home"></i> Inicio</button>
+    <button class="btn-primary" onclick="guardarRegistro()"><i class="ti ti-device-floppy"></i> Guardar</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANTALLA: HISTORIAL
+══════════════════════════════════════════ -->
+<div id="screen-historial" class="screen">
+  <div class="header"><div class="header-title">Mis registros</div></div>
+  <div class="hist-filtros" id="hist-filtros"></div>
+  <div class="hist-list-body" id="hist-list"></div>
+  <div class="storage-badge"><div class="storage-dot"></div><span id="storage-info">Guardado en este dispositivo</span></div>
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="showTab('home')"><i class="ti ti-plus-circle"></i>Nuevo</button>
+    <button class="tab-btn active" onclick="showTab('historial')"><i class="ti ti-clipboard-list"></i>Registros</button>
+    <button class="tab-btn" onclick="showTab('grafica')"><i class="ti ti-chart-line"></i>Gráfica</button>
+    <button class="tab-btn" onclick="showTab('perfil')"><i class="ti ti-user-circle"></i>Perfil</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANTALLA: GRÁFICA
+══════════════════════════════════════════ -->
+<div id="screen-grafica" class="screen">
+  <div class="header"><div class="header-title">Mis emociones</div></div>
+  <div style="display:flex;gap:6px;padding:.75rem 1rem .25rem;overflow-x:auto;">
+    <button class="hist-filtro" onclick="setRangoGraf(3)">3 días</button>
+    <button class="hist-filtro active" id="grbtn-7" onclick="setRangoGraf(7)">7 días</button>
+    <button class="hist-filtro" onclick="setRangoGraf(14)">2 semanas</button>
+    <button class="hist-filtro" onclick="setRangoGraf(30)">30 días</button>
+  </div>
+  <div class="chart-section">
+    <div class="vista-tabs">
+      <button class="vista-tab active" onclick="setVistaGraf('intensidad')">Intensidad promedio</button>
+      <button class="vista-tab" onclick="setVistaGraf('frecuencia')">Frecuencia</button>
+    </div>
+    <div class="canvas-box"><canvas id="myChart"></canvas></div>
+  </div>
+  <div class="leyenda" id="leyenda"></div>
+  <div class="graf-stats" id="graf-stats"></div>
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="showTab('home')"><i class="ti ti-plus-circle"></i>Nuevo</button>
+    <button class="tab-btn" onclick="showTab('historial')"><i class="ti ti-clipboard-list"></i>Registros</button>
+    <button class="tab-btn active" onclick="showTab('grafica')"><i class="ti ti-chart-line"></i>Gráfica</button>
+    <button class="tab-btn" onclick="showTab('perfil')"><i class="ti ti-user-circle"></i>Perfil</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PANTALLA: PERFIL
+══════════════════════════════════════════ -->
+<div id="screen-perfil" class="screen">
+  <div class="header">
+    <div class="header-title">Mi perfil</div>
+    <button class="icon-btn" onclick="editarPerfil()" style="margin-left:auto;font-size:13px;color:var(--blue);display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;font-family:var(--font);"><i class="ti ti-pencil" style="font-size:15px"></i> Editar</button>
+  </div>
+  <div style="padding:1rem;flex:1;display:flex;flex-direction:column;gap:.75rem;">
+    <div class="perfil-card">
+      <div class="perfil-av" id="perfil-av">😊</div>
+      <div>
+        <div class="perfil-nombre" id="perfil-nombre">—</div>
+        <div class="perfil-sub" id="perfil-sub">Perfil activo</div>
+      </div>
+    </div>
+    <div class="perfil-row">
+      <span class="perfil-row-label"><i class="ti ti-lock" style="font-size:16px"></i> PIN de acceso</span>
+      <span class="perfil-row-val">● ● ● ●</span>
+    </div>
+    <div class="perfil-row">
+      <span class="perfil-row-label"><i class="ti ti-clipboard" style="font-size:16px"></i> Registros guardados</span>
+      <span class="perfil-row-val" id="perfil-regs-num">0</span>
+    </div>
+    <button class="btn-danger" onclick="cambiarPIN()"><i class="ti ti-key" style="font-size:14px"></i> Cambiar PIN</button>
+    <button class="btn-danger" onclick="cerrarSesion()"><i class="ti ti-lock" style="font-size:14px"></i> Bloquear app</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="showTab('home')"><i class="ti ti-plus-circle"></i>Nuevo</button>
+    <button class="tab-btn" onclick="showTab('historial')"><i class="ti ti-clipboard-list"></i>Registros</button>
+    <button class="tab-btn" onclick="showTab('grafica')"><i class="ti ti-chart-line"></i>Gráfica</button>
+    <button class="tab-btn active" onclick="showTab('perfil')"><i class="ti ti-user-circle"></i>Perfil</button>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+const SK='tcc_registros_v1', PK='tcc_perfil_v1';
+const AVATARES=['😊','🙂','😄','🌟','🌿','🎯','🦋','🌙','⛅','🎵'];
+const PLUTCHIK=[
+  {nombre:'Alegría',color:'#639922',bg:'#EAF3DE',tx:'#27500A',borde:'#97C459',chips:['feliz','contento','satisfecho','entusiasmado','eufórico','esperanzado']},
+  {nombre:'Tristeza',color:'#378ADD',bg:'#E6F1FB',tx:'#0C447C',borde:'#85B7EB',chips:['triste','melancólico','decepcionado','solo','desesperanzado','abatido']},
+  {nombre:'Miedo',color:'#7F77DD',bg:'#EEEDFE',tx:'#3C3489',borde:'#AFA9EC',chips:['ansioso','nervioso','preocupado','aterrado','inseguro','tenso']},
+  {nombre:'Enojo',color:'#E24B4A',bg:'#FCEBEB',tx:'#791F1F',borde:'#F09595',chips:['enojado','frustrado','irritado','furioso','indignado','resentido']},
+  {nombre:'Asco',color:'#BA7517',bg:'#FAEEDA',tx:'#633806',borde:'#EF9F27',chips:['disgustado','repulsión','rechazo','incomodidad','hastío','aversión']},
+  {nombre:'Sorpresa',color:'#D4537E',bg:'#FBEAF0',tx:'#72243E',borde:'#ED93B1',chips:['sorprendido','asombrado','confundido','impactado','desconcertado','atónito']},
+  {nombre:'Anticipación',color:'#888780',bg:'#F1EFE8',tx:'#444441',borde:'#B4B2A9',chips:['esperanza','curiosidad','interés','impaciencia','entusiasmo','expectativa']},
+  {nombre:'Confianza',color:'#1D9E75',bg:'#E1F5EE',tx:'#085041',borde:'#5DCAA5',chips:['seguro','tranquilo','confiado','aceptado','valorado','en paz']}
+];
+const TIPOS={
+  ec:{nombre:'Emoción — Conducta',badge:'pill-emo',pasos:[
+    {id:'emocion',tipo:'emociones',titulo:'Emoción',icono:'💛',pregunta:'¿Qué emociones estás sintiendo? Elige de la lista o escríbelas.',clase:'diag-emo'},
+    {id:'conducta',tipo:'texto',titulo:'Conducta',icono:'🟢',pregunta:'¿Qué hiciste o dejaste de hacer cuando sentiste esas emociones?',placeholder:'Describe tu comportamiento...',clase:'diag-con'}
+  ]},
+  abc:{nombre:'Modelo cognitivo (ABC)',badge:'pill-pen',pasos:[
+    {id:'situacion',tipo:'texto',titulo:'Situación',icono:'📍',pregunta:'¿Qué estaba pasando? Describe el momento o evento que desencadenó todo.',placeholder:'Ej: estaba en el trabajo cuando mi jefe...',clase:'diag-sit'},
+    {id:'pensamiento',tipo:'texto',titulo:'Pensamiento',icono:'🧠',pregunta:'¿Qué pensamiento cruzó por tu mente? ¿Qué te dijiste a ti mismo?',placeholder:'Ej: "No soy capaz de...", "Siempre me pasa que..."',clase:'diag-pen'},
+    {id:'emocion',tipo:'emociones',titulo:'Emoción',icono:'💛',pregunta:'¿Qué emociones sentiste? Elige de la lista o escríbelas.',clase:'diag-emo'},
+    {id:'conducta',tipo:'texto',titulo:'Conducta',icono:'🟢',pregunta:'¿Qué hiciste o dejaste de hacer? Describe tu comportamiento.',placeholder:'Describe tu comportamiento...',clase:'diag-con'}
+  ]},
+  scc:{nombre:'Situación — Consecuencia',badge:'pill-sit',pasos:[
+    {id:'situacion',tipo:'texto',titulo:'Situación',icono:'📍',pregunta:'¿Qué situación o evento ocurrió? Descríbelo de manera objetiva.',placeholder:'Describe qué pasó...',clase:'diag-sit'},
+    {id:'conducta',tipo:'texto',titulo:'Conducta',icono:'🟢',pregunta:'¿Cómo respondiste? ¿Qué hiciste ante esa situación?',placeholder:'Describe tu comportamiento...',clase:'diag-con'},
+    {id:'consecuencia',tipo:'texto',titulo:'Consecuencia',icono:'🔶',pregunta:'¿Qué resultado o consecuencia tuvo tu conducta?',placeholder:'Describe el resultado...',clase:'diag-csc'}
+  ]}
+};
+
+let estado={tipo:null,pasoActual:0,respuestas:{}};
+let registros=[], perfil=null;
+let emoContador=0, emoModo='sugeridas';
+let filtroActivo='todos';
+let rangoGraf=7, vistaGraf='intensidad';
+let emocionesActivas=new Set(PLUTCHIK.map(p=>p.nombre));
+let chart=null;
+let lockPin='', setupPin='', confirmPin='', setupStep=1;
+let setupNombre='', setupAvatar='😊';
+
+function cargar(){
+  try{const r=localStorage.getItem(SK);registros=r?JSON.parse(r):[];}catch(e){registros=[];}
+  try{const p=localStorage.getItem(PK);perfil=p?JSON.parse(p):null;}catch(e){perfil=null;}
+}
+function guardarRegs(){try{localStorage.setItem(SK,JSON.stringify(registros));}catch(e){}}
+function guardarPerfil(){try{localStorage.setItem(PK,JSON.stringify(perfil));}catch(e){}}
+
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function updateTabs(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('active');});
+  document.querySelectorAll('.tab-btn').forEach(b=>{if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+tab+"'"))b.classList.add('active');});
+}
+
+function showTab(tab){
+  if(tab==='home'){actualizarStats();show('screen-home');}
+  else if(tab==='historial'){renderHistorial();show('screen-historial');}
+  else if(tab==='grafica'){renderGrafica();show('screen-grafica');}
+  else if(tab==='perfil'){mostrarPerfil();show('screen-perfil');}
+}
+
+function actualizarStats(){
+  const total=registros.length;
+  const ahora=new Date(), ini=new Date(ahora);
+  ini.setDate(ahora.getDate()-ahora.getDay());ini.setHours(0,0,0,0);
+  const semana=registros.filter(r=>new Date(r.fecha)>=ini).length;
+  document.getElementById('stat-total').textContent=total;
+  document.getElementById('stat-semana').textContent=semana;
+}
+
+function mostrarToast(msg,color){
+  const t=document.createElement('div');t.className='toast';
+  t.style.background=color||'#378ADD';t.textContent=msg;
+  document.getElementById('app').appendChild(t);
+  setTimeout(()=>t.remove(),2200);
+}
+
+/* ── INICIO ── */
+function init(){
+  cargar();
+  if(!perfil){iniciarSetup();}
+  else{mostrarLock();}
+}
+
+/* ── PIN LOCK ── */
+function mostrarLock(){
+  lockPin='';
+  document.getElementById('lock-av').textContent=perfil.avatar||'😊';
+  document.getElementById('lock-nombre').textContent=perfil.nombre||'Bienvenido';
+  document.getElementById('lock-error').textContent='';
+  actualizarLockDots();
+  renderLockNumpad();
+  show('screen-lock');
+}
+function renderLockNumpad(){
+  const wrap=document.getElementById('lock-numpad');
+  const teclas=['1','2','3','4','5','6','7','8','9','','0','del'];
+  wrap.innerHTML=teclas.map(t=>{
+    if(t==='')return '<div class="num-btn empty"></div>';
+    if(t==='del')return '<button class="num-btn" onclick="digitoLock(\'del\')"><i class="ti ti-backspace" style="font-size:20px"></i></button>';
+    return '<button class="num-btn" onclick="digitoLock(\''+t+'\')">'+t+'</button>';
+  }).join('');
+}
+function digitoLock(d){
+  if(d==='del'){lockPin=lockPin.slice(0,-1);}
+  else if(lockPin.length<4){lockPin+=d;}
+  actualizarLockDots();
+  document.getElementById('lock-error').textContent='';
+  if(lockPin.length===4){
+    setTimeout(()=>{
+      if(lockPin===perfil.pin){actualizarStats();show('screen-home');}
+      else{
+        document.getElementById('lock-dots').classList.add('shake');
+        document.getElementById('lock-error').textContent='PIN incorrecto. Intenta de nuevo.';
+        document.querySelectorAll('#lock-dots .pin-dot').forEach(d=>d.classList.add('error'));
+        setTimeout(()=>{document.getElementById('lock-dots').classList.remove('shake');document.querySelectorAll('#lock-dots .pin-dot').forEach(d=>{d.classList.remove('error');});lockPin='';actualizarLockDots();},700);
+      }
+    },250);
+  }
+}
+function actualizarLockDots(){
+  document.querySelectorAll('#lock-dots .pin-dot').forEach((d,i)=>{d.classList.toggle('filled',i<lockPin.length);d.classList.remove('error');});
+}
+function cerrarSesion(){mostrarLock();}
+function olvidePIN(){if(confirm('Si olvidaste tu PIN, deberás crear un perfil nuevo.\n¿Continuar?')){perfil=null;try{localStorage.removeItem(PK);}catch(e){}iniciarSetup();}}
+
+/* ── SETUP ── */
+function iniciarSetup(){
+  setupStep=1;setupNombre='';setupPin='';confirmPin='';setupAvatar='😊';
+  renderAvatares();renderMiniNumpad('setup-numpad',digitoSetup);renderMiniNumpad('confirm-numpad',digitoConfirm);
+  document.getElementById('input-nombre').value='';
+  document.getElementById('input-nombre').oninput=()=>{setupNombre=document.getElementById('input-nombre').value.trim();document.getElementById('setup-next-btn').disabled=setupNombre.length===0;};
+  mostrarSetupStep(1);show('screen-setup');
+}
+function renderAvatares(){
+  document.getElementById('avatar-pick').innerHTML=AVATARES.map(av=>'<div class="av-opt'+(av===setupAvatar?' sel':'')+'" onclick="selAvatar(\''+av+'\')" data-av="'+av+'">'+av+'</div>').join('');
+}
+function selAvatar(av){setupAvatar=av;document.querySelectorAll('.av-opt').forEach(el=>{el.classList.toggle('sel',el.dataset.av===av);});}
+function mostrarSetupStep(n){
+  setupStep=n;
+  document.getElementById('setup-step-1').style.display=n===1?'block':'none';
+  document.getElementById('setup-step-2').style.display=n===2?'block':'none';
+  document.getElementById('setup-step-3').style.display=n===3?'block':'none';
+  document.getElementById('sdot-1').classList.toggle('active',n===1);
+  document.getElementById('sdot-2').classList.toggle('active',n>=2);
+  const btn=document.getElementById('setup-next-btn');
+  if(n===1){document.getElementById('setup-title').textContent='Crear perfil';btn.textContent='Continuar';btn.disabled=setupNombre.length===0;}
+  else if(n===2){document.getElementById('setup-title').textContent='Crea tu PIN';btn.textContent='Continuar';btn.disabled=true;setupPin='';actualizarSetupDots();}
+  else if(n===3){document.getElementById('setup-title').textContent='Confirma tu PIN';btn.textContent='Guardar perfil';btn.disabled=true;confirmPin='';actualizarConfirmDots();}
+}
+function setupNext(){
+  if(setupStep===1){setupNombre=document.getElementById('input-nombre').value.trim();if(!setupNombre)return;mostrarSetupStep(2);}
+  else if(setupStep===3){
+    if(confirmPin!==setupPin){document.getElementById('confirm-error').textContent='Los PIN no coinciden.';confirmPin='';actualizarConfirmDots();return;}
+    perfil={nombre:setupNombre,avatar:setupAvatar,pin:setupPin,creado:new Date().toISOString()};
+    guardarPerfil();actualizarStats();show('screen-home');
+  }
+}
+function digitoSetup(d){
+  if(d==='del'){setupPin=setupPin.slice(0,-1);}else if(setupPin.length<4){setupPin+=d;}
+  actualizarSetupDots();document.getElementById('setup-next-btn').disabled=setupPin.length<4;
+  if(setupPin.length===4)setTimeout(()=>mostrarSetupStep(3),300);
+}
+function digitoConfirm(d){
+  if(d==='del'){confirmPin=confirmPin.slice(0,-1);}else if(confirmPin.length<4){confirmPin+=d;}
+  actualizarConfirmDots();document.getElementById('confirm-error').textContent='';
+  document.getElementById('setup-next-btn').disabled=confirmPin.length<4;
+  if(confirmPin.length===4)setTimeout(()=>{
+    if(confirmPin===setupPin){setupNext();}
+    else{document.getElementById('confirm-error').textContent='Los PIN no coinciden. Intenta de nuevo.';confirmPin='';actualizarConfirmDots();document.getElementById('setup-next-btn').disabled=true;}
+  },300);
+}
+function actualizarSetupDots(){document.querySelectorAll('#setup-dots .pin-setup-dot').forEach((d,i)=>{d.classList.toggle('filled',i<setupPin.length);});}
+function actualizarConfirmDots(){document.querySelectorAll('#confirm-dots .pin-setup-dot').forEach((d,i)=>{d.classList.toggle('filled',i<confirmPin.length);});}
+function renderMiniNumpad(id,cb){
+  const wrap=document.getElementById(id);
+  const teclas=['1','2','3','4','5','6','7','8','9','','0','del'];
+  wrap.innerHTML=teclas.map(t=>{
+    if(t==='')return '<div class="mini-num" style="border:none;background:none;cursor:default;"></div>';
+    if(t==='del')return '<button class="mini-num" onclick="('+cb.toString()+')(\'del\')"><i class="ti ti-backspace" style="font-size:18px"></i></button>';
+    return '<button class="mini-num" onclick="('+cb.toString()+')(\''+t+'\')">'+t+'</button>';
+  }).join('');
+}
+function mostrarPerfil(){
+  document.getElementById('perfil-av').textContent=perfil.avatar||'😊';
+  document.getElementById('perfil-nombre').textContent=perfil.nombre||'—';
+  document.getElementById('perfil-regs-num').textContent=registros.length;
+  const f=new Date(perfil.creado);
+  document.getElementById('perfil-sub').textContent='Desde '+f.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+}
+function editarPerfil(){
+  setupNombre=perfil.nombre;setupAvatar=perfil.avatar||'😊';
+  document.getElementById('input-nombre').value=setupNombre;
+  document.getElementById('setup-next-btn').disabled=false;
+  renderAvatares();renderMiniNumpad('setup-numpad',digitoSetup);renderMiniNumpad('confirm-numpad',digitoConfirm);
+  mostrarSetupStep(1);document.getElementById('setup-title').textContent='Editar perfil';
+  document.getElementById('setup-next-btn').textContent='Guardar';
+  document.getElementById('setup-next-btn').onclick=()=>{
+    setupNombre=document.getElementById('input-nombre').value.trim();if(!setupNombre)return;
+    perfil.nombre=setupNombre;perfil.avatar=setupAvatar;guardarPerfil();mostrarPerfil();show('screen-perfil');
+  };
+  show('screen-setup');
+}
+function cambiarPIN(){
+  setupPin='';confirmPin='';renderMiniNumpad('setup-numpad',digitoSetup);renderMiniNumpad('confirm-numpad',digitoConfirm);
+  mostrarSetupStep(2);document.getElementById('setup-title').textContent='Nuevo PIN';show('screen-setup');
+}
+
+/* ── REGISTRO ── */
+function iniciarRegistro(tipo){
+  estado={tipo,pasoActual:0,respuestas:{}};renderPaso();show('screen-paso');
+}
+function getCatForEmo(nombre){return PLUTCHIK.find(c=>c.chips.includes(nombre)||c.nombre.toLowerCase()===nombre.toLowerCase())||null;}
+
+function renderPaso(){
+  const t=TIPOS[estado.tipo],p=t.pasos[estado.pasoActual],total=t.pasos.length,actual=estado.pasoActual+1;
+  document.getElementById('prog-label').textContent='Paso '+actual+' de '+total;
+  document.getElementById('prog-tipo').textContent=t.nombre;
+  document.getElementById('prog-fill').style.width=Math.round((actual/total)*100)+'%';
+  document.getElementById('paso-icono').textContent=p.icono;
+  document.getElementById('paso-titulo').textContent=p.titulo;
+  document.getElementById('paso-pregunta').textContent=p.pregunta;
+  document.getElementById('btn-siguiente').textContent=(actual===total)?'Ver mi registro':'Continuar';
+  const area=document.getElementById('input-area');
+  if(p.tipo==='emociones')renderEmocionesUI(area,p.id);
+  else{const saved=estado.respuestas[p.id]||'';area.innerHTML='<textarea class="paso-textarea" id="txt-input" placeholder="'+p.placeholder+'" rows="6">'+saved+'</textarea>';}
+}
+function renderEmocionesUI(area,pid){
+  emoContador=0;emoModo='sugeridas';
+  area.innerHTML='<div class="emo-tabs"><button class="emo-tab active" id="tab-sug" onclick="cambiarModo(\'sugeridas\')">Sugeridas</button><button class="emo-tab" id="tab-libre" onclick="cambiarModo(\'libre\')">Escribir</button></div><div id="emo-panel"></div>';
+  renderPanelEmociones(pid);
+}
+function cambiarModo(modo){
+  emoModo=modo;
+  document.getElementById('tab-sug').classList.toggle('active',modo==='sugeridas');
+  document.getElementById('tab-libre').classList.toggle('active',modo==='libre');
+  renderPanelEmociones(TIPOS[estado.tipo].pasos[estado.pasoActual].id);
+}
+function renderPanelEmociones(pid){
+  const panel=document.getElementById('emo-panel');
+  const saved=estado.respuestas[pid]||[];
+  if(emoModo==='sugeridas'){
+    let html='<div class="plutchik-grid">';
+    PLUTCHIK.forEach((cat,ci)=>{
+      html+='<div class="plutchik-cat" style="background:'+cat.bg+';border-color:'+cat.borde+'"><div class="plutchik-cat-header" style="color:'+cat.tx+'" onclick="toggleCat('+ci+')"><span>'+cat.nombre+'</span><i class="ti ti-chevron-down" id="chevron-'+ci+'" style="font-size:13px"></i></div><div class="plutchik-cat-body" id="catbody-'+ci+'">';
+      cat.chips.forEach(chip=>{const isSel=saved.some(e=>e.nombre===chip);html+='<button class="emo-chip'+(isSel?' selected':'')+'" style="background:'+cat.bg+';color:'+cat.tx+';border-color:'+(isSel?cat.borde:'transparent')+'" onclick="toggleChip(this,\''+chip+'\',\''+pid+'\','+ci+')">'+chip+'</button>';});
+      html+='</div></div>';
+    });
+    html+='</div><div id="sel-list" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;"></div>';
+    panel.innerHTML=html;
+    saved.forEach(e=>agregarSliderSel(e.nombre,e.intensidad,pid));
+  }else{
+    emoContador=0;
+    panel.innerHTML='<div id="emo-lista"></div><button class="btn-agregar-emo" onclick="agregarEmoLibre()"><i class="ti ti-plus"></i> Agregar emoción</button>';
+    if(saved.length===0)agregarEmoLibre('',5);else saved.forEach(e=>agregarEmoLibre(e.nombre,e.intensidad));
+  }
+}
+function toggleCat(ci){
+  const body=document.getElementById('catbody-'+ci),chev=document.getElementById('chevron-'+ci);
+  const isOpen=body.style.display!=='none';body.style.display=isOpen?'none':'flex';chev.style.transform=isOpen?'rotate(-90deg)':'';
+}
+function toggleChip(btn,chip,pid,ci){
+  const cat=PLUTCHIK[ci];const saved=estado.respuestas[pid]||[];const idx=saved.findIndex(e=>e.nombre===chip);
+  if(idx>=0){saved.splice(idx,1);btn.classList.remove('selected');btn.style.borderColor='transparent';const slot=document.getElementById('slot-'+chip.replace(/[^a-z]/gi,''));if(slot)slot.remove();}
+  else{saved.push({nombre:chip,intensidad:5});btn.classList.add('selected');btn.style.borderColor=cat.borde;agregarSliderSel(chip,5,pid);}
+  estado.respuestas[pid]=saved;
+}
+function agregarSliderSel(nombre,intensidad,pid){
+  const list=document.getElementById('sel-list');if(!list)return;
+  const slotId='slot-'+nombre.replace(/[^a-z]/gi,'');if(document.getElementById(slotId))return;
+  const div=document.createElement('div');div.id=slotId;div.className='emo-item';
+  div.innerHTML='<div class="emo-item-top"><span class="emo-nombre">'+nombre+'</span></div><div class="emo-slider-row"><span class="emo-slider-label">Intensidad</span><input type="range" min="1" max="10" step="1" value="'+intensidad+'" oninput="actualizarInt(\''+nombre+'\',this.value,\''+pid+'\')"/><span class="emo-slider-val" id="val-slot-'+nombre.replace(/[^a-z]/gi,'')+'">'+intensidad+'/10</span></div>';
+  list.appendChild(div);
+}
+function actualizarInt(nombre,val,pid){
+  const el=document.getElementById('val-slot-'+nombre.replace(/[^a-z]/gi,''));if(el)el.textContent=val+'/10';
+  const saved=estado.respuestas[pid]||[];const e=saved.find(e=>e.nombre===nombre);if(e)e.intensidad=parseInt(val);
+}
+function agregarEmoLibre(nombre,intensidad){
+  const lista=document.getElementById('emo-lista');if(!lista)return;
+  const id='emo-'+(++emoContador),intVal=intensidad!==undefined?intensidad:5;
+  const div=document.createElement('div');div.className='emo-item';div.id=id;
+  div.innerHTML='<div class="emo-item-top"><i class="ti ti-mood-smile" style="font-size:18px;color:var(--text2)"></i><input class="emo-input-libre" type="text" placeholder="Ej: ansiedad, tristeza..." value="'+(nombre||'')+'" /><button class="emo-del" onclick="eliminarEmoLibre(\''+id+'\')"><i class="ti ti-x" style="font-size:16px"></i></button></div><div class="emo-slider-row"><span class="emo-slider-label">Intensidad</span><input type="range" min="1" max="10" step="1" value="'+intVal+'" oninput="this.nextElementSibling.textContent=this.value+\'/10\'"/><span class="emo-slider-val">'+intVal+'/10</span></div>';
+  lista.appendChild(div);
+}
+function eliminarEmoLibre(id){const el=document.getElementById(id);if(el&&document.querySelectorAll('.emo-item').length>1)el.remove();}
+function leerEmociones(pid){
+  if(emoModo==='sugeridas')return estado.respuestas[pid]||[];
+  const items=document.querySelectorAll('.emo-item'),result=[];
+  items.forEach(item=>{const inp=item.querySelector('.emo-input-libre'),slider=item.querySelector('input[type=range]');if(inp&&inp.value.trim()&&slider)result.push({nombre:inp.value.trim(),intensidad:parseInt(slider.value)});});
+  return result;
+}
+function pasoSiguiente(){
+  const t=TIPOS[estado.tipo],p=t.pasos[estado.pasoActual];
+  if(p.tipo==='emociones'){
+    const emos=leerEmociones(p.id);
+    if(emos.length===0){const f=document.querySelector('.emo-input-libre');if(f){f.style.outline='2px solid #E24B4A';setTimeout(()=>{f.style.outline='';},1500);}return;}
+    estado.respuestas[p.id]=emos;
+  }else{
+    const txt=document.getElementById('txt-input');
+    if(!txt||txt.value.trim()===''){txt.style.borderColor='#E24B4A';txt.focus();setTimeout(()=>{txt.style.borderColor='';},1500);return;}
+    estado.respuestas[p.id]=txt.value.trim();
+  }
+  if(estado.pasoActual<t.pasos.length-1){estado.pasoActual++;renderPaso();}else mostrarResumen();
+}
+function pasoAnterior(){
+  const t=TIPOS[estado.tipo],p=t.pasos[estado.pasoActual];
+  if(p.tipo==='emociones')estado.respuestas[p.id]=leerEmociones(p.id);
+  else{const txt=document.getElementById('txt-input');if(txt)estado.respuestas[p.id]=txt.value.trim();}
+  if(estado.pasoActual>0){estado.pasoActual--;renderPaso();}else{actualizarStats();show('screen-home');}
+}
+function mostrarResumen(){
+  const t=TIPOS[estado.tipo];document.getElementById('res-tipo').textContent=t.nombre;
+  let html='<div class="diagrama">';
+  t.pasos.forEach((p,i)=>{
+    let preview='';
+    if(p.tipo==='emociones'){const emos=estado.respuestas[p.id]||[];preview=emos.map(e=>e.nombre+' ('+e.intensidad+'/10)').join(', ');}
+    else{const v=estado.respuestas[p.id]||'';preview=v.length>60?v.substring(0,60)+'...':v;}
+    html+='<div class="diag-node '+p.clase+'"><div style="font-size:10px;font-weight:500;opacity:.8;">'+p.titulo+'</div><div style="font-size:12px;margin-top:2px;">'+preview+'</div></div>';
+    if(i<t.pasos.length-1)html+='<div class="diag-arrow">↓</div>';
+  });
+  html+='</div>';
+  t.pasos.forEach(p=>{
+    let bodyHtml='';
+    if(p.tipo==='emociones'){
+      const emos=estado.respuestas[p.id]||[];
+      bodyHtml=emos.map(e=>{const cat=getCatForEmo(e.nombre);const bg=cat?cat.bg:'#FAECE7';const tx=cat?cat.tx:'#712B13';const ib=cat?cat.borde:'#F0997B';return '<span class="emo-tag" style="background:'+bg+';color:'+tx+'">'+e.nombre+'<span class="emo-tag-int" style="background:'+ib+';color:'+tx+'">'+e.intensidad+'/10</span></span>';}).join('');
+    }else{bodyHtml=estado.respuestas[p.id]||'';}
+    html+='<div class="resumen-item"><div class="resumen-item-header '+p.clase+'">'+p.icono+' '+p.titulo+'</div><div class="resumen-item-body">'+bodyHtml+'</div></div>';
+  });
+  document.getElementById('res-body').innerHTML=html;show('screen-resumen');
+}
+function guardarRegistro(){
+  const t=TIPOS[estado.tipo],fecha=new Date();
+  const primeraResp=estado.respuestas[t.pasos[0].id];
+  const preview=Array.isArray(primeraResp)?primeraResp.map(e=>e.nombre).join(', '):(primeraResp||'');
+  registros.unshift({id:Date.now(),tipo:estado.tipo,nombreTipo:t.nombre,badge:t.badge,fecha:fecha.toISOString(),fechaStr:fecha.toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}),pasos:t.pasos,respuestas:JSON.parse(JSON.stringify(estado.respuestas)),preview});
+  guardarRegs();actualizarStats();show('screen-home');mostrarToast('✓ Registro guardado','#378ADD');
+}
+
+/* ── HISTORIAL ── */
+function renderHistorial(){
+  const filtros=document.getElementById('hist-filtros'),lista=document.getElementById('hist-list');
+  const tipos=[{id:'todos',label:'Todos'},...Object.entries(TIPOS).map(([k,v])=>({id:k,label:v.nombre}))];
+  filtros.innerHTML=tipos.map(f=>'<button class="hist-filtro'+(filtroActivo===f.id?' active':'')+'" onclick="setFiltro(\''+f.id+'\')">'+f.label+'</button>').join('');
+  const filtrados=filtroActivo==='todos'?registros:registros.filter(r=>r.tipo===filtroActivo);
+  const info=document.getElementById('storage-info');
+  info.textContent=registros.length===0?'Guardado en este dispositivo':registros.length+' registro'+(registros.length!==1?'s':'')+' guardados en este dispositivo';
+  if(filtrados.length===0){lista.innerHTML='<div class="hist-empty"><i class="ti ti-clipboard" style="font-size:28px;display:block;margin-bottom:8px"></i>'+(registros.length===0?'Aún no tienes registros guardados.':'No hay registros de este tipo.')+'</div>';return;}
+  lista.innerHTML=filtrados.map(r=>{
+    const emoPaso=r.pasos.find(p=>p.tipo==='emociones'),emos=emoPaso?(r.respuestas[emoPaso.id]||[]):[];
+    const etiqs=emos.map(e=>{const cat=getCatForEmo(e.nombre);return '<span class="hist-emo-chip" style="background:'+(cat?cat.bg:'#FAECE7')+';color:'+(cat?cat.tx:'#712B13')+'">'+e.nombre+' '+e.intensidad+'/10</span>';}).join('');
+    const primerTexto=r.pasos.find(p=>p.tipo==='texto'&&r.respuestas[p.id]);
+    const prev=primerTexto?(r.respuestas[primerTexto.id]||'').substring(0,80):'';
+    return '<div class="hist-item"><div class="hist-item-header"><span class="hist-tipo-badge '+r.badge+'">'+r.nombreTipo+'</span><div class="hist-meta"><span class="hist-fecha-lbl">'+r.fechaStr+'</span><button class="hist-del-btn" onclick="confirmarEliminar('+r.id+')"><i class="ti ti-trash" style="font-size:15px"></i></button></div></div>'+(prev?'<div class="hist-preview">'+prev+(prev.length>=80?'...':'')+'</div>':'')+(etiqs?'<div class="hist-emos">'+etiqs+'</div>':'')+'</div>';
+  }).join('');
+}
+function setFiltro(id){filtroActivo=id;renderHistorial();}
+function confirmarEliminar(id){
+  if(confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')){
+    registros=registros.filter(r=>r.id!==id);guardarRegs();renderHistorial();mostrarToast('Registro eliminado','#888780');
+  }
+}
+
+/* ── GRÁFICA ── */
+function getDias(n){const dias=[],hoy=new Date();for(let i=n-1;i>=0;i--){const d=new Date(hoy);d.setDate(hoy.getDate()-i);d.setHours(0,0,0,0);dias.push(d);}return dias;}
+function labelDia(d,rango){return rango<=7?d.toLocaleDateString('es-MX',{weekday:'short'}):d.toLocaleDateString('es-MX',{day:'numeric',month:'short'});}
+function procesarDatos(dias){
+  return dias.map(d=>{
+    const fin=new Date(d);fin.setHours(23,59,59,999);
+    const regsDelDia=registros.filter(r=>{const f=new Date(r.fecha);return f>=d&&f<=fin;});
+    const emoMap={};
+    regsDelDia.forEach(r=>{r.pasos.forEach(p=>{if(p.tipo==='emociones'){const emos=r.respuestas[p.id]||[];emos.forEach(e=>{const cat=getCatForEmo(e.nombre);if(!cat)return;const key=cat.nombre;if(!emoMap[key])emoMap[key]={suma:0,count:0};emoMap[key].suma+=e.intensidad;emoMap[key].count+=1;});}});});
+    return emoMap;
+  });
+}
+function setRangoGraf(n){
+  rangoGraf=n;
+  document.querySelectorAll('#screen-grafica .hist-filtro').forEach((b,i)=>{b.classList.toggle('active',[3,7,14,30][i]===n);});
+  renderGrafica();
+}
+function setVistaGraf(v){
+  vistaGraf=v;
+  document.querySelectorAll('.vista-tab').forEach((b,i)=>{b.classList.toggle('active',['intensidad','frecuencia'][i]===v);});
+  renderGrafica();
+}
+function renderGrafica(){
+  const dias=getDias(rangoGraf),porDia=procesarDatos(dias);
+  const labels=dias.map(d=>labelDia(d,rangoGraf));
+  const isDark=window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const textColor=isDark?'#a8a69e':'#5c5c58',gridColor=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+  const datasets=PLUTCHIK.filter(cat=>emocionesActivas.has(cat.nombre)).map(cat=>{
+    const data=porDia.map(d=>{if(!d[cat.nombre])return null;return vistaGraf==='intensidad'?Math.round((d[cat.nombre].suma/d[cat.nombre].count)*10)/10:d[cat.nombre].count;});
+    return {label:cat.nombre,data,borderColor:cat.color,backgroundColor:cat.color+'33',borderWidth:2,pointRadius:4,tension:0.35,spanGaps:true,hidden:!data.some(v=>v!==null&&v>0)};
+  });
+  const hayDatos=datasets.some(ds=>ds.data.some(v=>v!==null&&v>0));
+  if(chart)chart.destroy();
+  const ctx=document.getElementById('myChart').getContext('2d');
+  if(!hayDatos){chart=null;document.getElementById('leyenda').innerHTML='<div style="text-align:center;color:var(--text2);font-size:13px;padding:1rem;">Sin registros en este período.</div>';document.getElementById('graf-stats').innerHTML='';return;}
+  chart=new Chart(ctx,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:isDark?'#2c2c2a':'#fff',titleColor:textColor,bodyColor:textColor,borderColor:isDark?'rgba(255,255,255,0.15)':'rgba(0,0,0,0.12)',borderWidth:0.5,padding:10,callbacks:{label:ctx=>{if(ctx.raw===null)return null;return ' '+ctx.dataset.label+': '+ctx.raw+(vistaGraf==='intensidad'?'/10':' veces');}}}},scales:{x:{grid:{color:gridColor},ticks:{color:textColor,font:{size:11}}},y:{min:0,max:vistaGraf==='intensidad'?10:undefined,grid:{color:gridColor},ticks:{color:textColor,font:{size:11},callback:v=>vistaGraf==='intensidad'?v:'×'+v}}}}});
+  const vis=datasets.filter(ds=>ds.data.some(v=>v!==null&&v>0));
+  document.getElementById('leyenda').innerHTML=vis.map(ds=>'<div class="ley-item'+(emocionesActivas.has(ds.label)?'':' inactive')+'" onclick="toggleEmo(\''+ds.label+'\')"><div class="ley-dot" style="background:'+ds.borderColor+'"></div>'+ds.label+'</div>').join('');
+  const totales={};porDia.forEach(d=>{Object.entries(d).forEach(([k,v])=>{if(!totales[k])totales[k]={suma:0,count:0};totales[k].suma+=v.suma;totales[k].count+=v.count;});});
+  const entries=Object.entries(totales).filter(([k])=>emocionesActivas.has(k));
+  if(entries.length===0){document.getElementById('graf-stats').innerHTML='';return;}
+  const masFrec=entries.slice().sort((a,b)=>b[1].count-a[1].count)[0];
+  const masInt=entries.slice().sort((a,b)=>(b[1].suma/b[1].count)-(a[1].suma/a[1].count))[0];
+  const catFrec=PLUTCHIK.find(p=>p.nombre===masFrec[0]),catInt=PLUTCHIK.find(p=>p.nombre===masInt[0]);
+  const totalRegs=registros.filter(r=>{const f=new Date(r.fecha),ini=getDias(rangoGraf)[0];return f>=ini;}).length;
+  document.getElementById('graf-stats').innerHTML='<div class="graf-stat"><div class="graf-stat-num">'+totalRegs+'</div><div class="graf-stat-lbl">registros en el período</div></div><div class="graf-stat"><div class="graf-stat-num">'+Math.round(masInt[1].suma/masInt[1].count*10)/10+'</div><div class="graf-stat-lbl">intensidad más alta</div><div class="graf-stat-emo"><div class="graf-stat-dot" style="background:'+(catInt?catInt.color:'#888')+'"></div>'+masInt[0]+'</div></div><div class="graf-stat"><div class="graf-stat-num">'+masFrec[1].count+'</div><div class="graf-stat-lbl">veces la más frecuente</div><div class="graf-stat-emo"><div class="graf-stat-dot" style="background:'+(catFrec?catFrec.color:'#888')+'"></div>'+masFrec[0]+'</div></div><div class="graf-stat"><div class="graf-stat-num">'+entries.length+'</div><div class="graf-stat-lbl">emociones distintas</div></div>';
+}
+function toggleEmo(nombre){
+  if(emocionesActivas.has(nombre)){if(emocionesActivas.size>1)emocionesActivas.delete(nombre);}else{emocionesActivas.add(nombre);}
+  renderGrafica();
+}
+
+init();
+</script>
+</body>
+</html>
